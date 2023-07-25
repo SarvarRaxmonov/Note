@@ -5,7 +5,7 @@ from ckeditor.fields import RichTextField
 
 
 class RequiredFieldsModel(models.Model):
-    name = models.CharField(max_length=30, blank=False, default=None)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     email = models.EmailField()
     phone_number = PhoneField(blank=True, help_text="Contact phone number")
 
