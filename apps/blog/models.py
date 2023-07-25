@@ -5,7 +5,7 @@ from ckeditor.fields import RichTextField
 
 
 class RequiredFieldsModel(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=2)
     email = models.EmailField()
     phone_number = PhoneField(blank=True, help_text="Contact phone number")
 
@@ -44,8 +44,9 @@ class AuthorOccupationModel(models.Model):
         return self.job_title
 
 
-class AuthorModel(RequiredFieldsModel):
-    Address = models.CharField(max_length=300, blank=True, default=None)
+class AuthorModel(models.Model):
+    name = models.TextField(default="Annonymous User")
+    Address = models.CharField(max_length=300, blank=True, null=True)
     social_media_links = models.ManyToManyField(SocialMediaModel)
     occupation = models.ManyToManyField(AuthorOccupationModel)
 
@@ -57,9 +58,9 @@ class BlogPostModel(models.Model):
     author = models.ForeignKey(AuthorModel, on_delete=models.CASCADE)
     category = models.ForeignKey(CategoryModel, on_delete=models.CASCADE)
     title = models.TextField()
-    date_time = models.DateTimeField(auto_now_add=True)
-    view_count = models.IntegerField(default=0, null=False)
-    hashtag = models.ForeignKey(TagModel, on_delete=models.CASCADE)
+    date_time = models.DateField(auto_now=True)
+    view_count = models.IntegerField(default=0)
+    hashtag = models.ManyToManyField(TagModel)
     image = models.ImageField(upload_to="images_of_author_posts", blank=True)
     video = models.FileField(upload_to="videos_of_author_posts", blank=True)
     text = RichTextField(blank=True, null=True)
@@ -83,6 +84,14 @@ class ReviewModel(models.Model):
 
     def __str__(self):
         return self.post_id.title
+
+
+class PageVisit(models.Model):
+    url = models.URLField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Page Visit {self.id}"
 
 
 class ContactModel(RequiredFieldsModel):

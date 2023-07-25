@@ -3,7 +3,7 @@ from rest_framework import routers
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.urls import path
-from .views import LoginView, RegisterView
+from .views import LoginView, RegisterView, BlogPostViewSet
 
 router = routers.DefaultRouter()
 
@@ -27,8 +27,7 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
-    path('api/login/', LoginView.as_view(), name='login'),
-    path('api/register/', RegisterView.as_view(), name='register'),
+    path("api/login/", LoginView.as_view(), name="login"),
+    path("api/register/", RegisterView.as_view(), name="register"),
+    path("main/", BlogPostViewSet.as_view({"get": "list"}), name="main"),
 ]
-
-
