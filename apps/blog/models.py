@@ -3,10 +3,11 @@ from phone_field import PhoneField
 from django.contrib.auth.models import User
 from ckeditor.fields import RichTextField
 
+
 class RequiredFieldsModel(models.Model):
     name = models.CharField(max_length=30, blank=False, default=None)
     email = models.EmailField()
-    phone_number = PhoneField(blank=True, help_text='Contact phone number')
+    phone_number = PhoneField(blank=True, help_text="Contact phone number")
 
     class Meta:
         abstract = True
@@ -52,7 +53,6 @@ class AuthorModel(RequiredFieldsModel):
         return self.name
 
 
-
 class BlogPostModel(models.Model):
     author = models.ForeignKey(AuthorModel, on_delete=models.CASCADE)
     category = models.ForeignKey(CategoryModel, on_delete=models.CASCADE)
@@ -62,7 +62,7 @@ class BlogPostModel(models.Model):
     hashtag = models.ForeignKey(TagModel, on_delete=models.CASCADE)
     image = models.ImageField(upload_to="images_of_author_posts", blank=True)
     video = models.FileField(upload_to="videos_of_author_posts", blank=True)
-    text = RichTextField(blank=True,null=True)
+    text = RichTextField(blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -91,8 +91,3 @@ class ContactModel(RequiredFieldsModel):
 
     def __str__(self):
         return self.name
-
-
-
-
-
