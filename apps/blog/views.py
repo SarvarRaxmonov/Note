@@ -3,20 +3,16 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from django.contrib.auth import authenticate
-from rest_framework import generics
 from .serializers import UserSerializer
 from rest_framework import viewsets, filters
-from .models import BlogPostModel, ReviewModel, CategoryModel
-from .serializers import (
-    BlogPostSerializer,
-    ReviewModelSerializer,
-    CategoryModelSerializer,
-    TagModelSerializer,
-    BlogSerializer
-)
+from .models import BlogPost, PageVisit, ViewCount, Review, Category, Author, Contact
+from .serializers import BlogPostSerializer, ReviewSerializer, AuthorSerializer, ContactSerializer
 from django.utils import timezone
 from django.contrib.auth.models import User
-
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import BlogPostFilter
+from django.shortcuts import get_object_or_404
+from rest_framework import generics
 
 class RegisterView(APIView):
     def post(self, request):
@@ -43,21 +39,27 @@ class LoginView(APIView):
 
 
 class BlogPostViewSet(viewsets.ModelViewSet):
-    queryset = BlogPostModel.objects.all()
+    queryset = BlogPost.objects.all()
     serializer_class = BlogPostSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["category", "title"]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ["title"]
+    ordering = ["-created"]
+    filterset_class = BlogPostFilter
 
     def list(self, request, *args, **kwargs):
-        most_recent_posts = self.queryset.order_by("-date_time")
-        most_targetted_posts = ReviewModel.objects.all().order_by("-review_score")[:2]
-        categories = CategoryModel.objects.all()
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(
+                {
+                    "additional_data": self.retrieve_additional_data(),
+                    "posts": serializer.data,
+                }
+            )
+
+    def retrieve_additional_data(self):
         date = timezone.now().date()
-        today_updates_post = self.queryset.filter(
-            date_time__year=date.year,
-            date_time__month=date.month,
-            date_time__day=date.day,
-        ).count()
         new_users = (
             User.objects.all()
             .filter(
@@ -67,32 +69,49 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             )
             .count()
         )
-        post = self.get_serializer(most_recent_posts, many=True)
-        targetted_posts = ReviewModelSerializer(most_targetted_posts, many=True)
-        category_counts = CategoryModelSerializer(categories, many=True)
+        review = ReviewSerializer(Review.objects.most_targeted_posts(), many=True)
+        authors = AuthorSerializer(Author.objects.get_authors_with_highest_views(), many=True)
+        representation = {
+            "Categories count": Category.objects.get_category_post_counts(),
+            "new posts count": BlogPost.objects.new_posts_on_current_date(),
+            "total visitors": PageVisit.objects.get_today_visits_count(),
+            "blog read": ViewCount.objects.get_today_read_count(),
+            "Targeted posts count": review.data,
+            "new users count": new_users,
+            "top authors":authors.data
+        }
 
-        return Response(
-            {
-                "targetted_posts": targetted_posts.data,
-                "category_counts": category_counts.data[0]["Categories count"],
-                "today's update": {
-                    "posts": today_updates_post,
-                    "New subscribers": new_users,
-                },
-                "post": post.data,
-            }
-        )
+        return representation
 
 
 
-class BlogListCreateView(generics.ListCreateAPIView):
-    queryset = BlogPostModel.objects.all()
-    serializer_class = BlogSerializer
 
-class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = BlogPostModel.objects.all()
-    serializer_class = BlogSerializer
+class BlogPostDetailViewset(viewsets.ModelViewSet):
+    queryset = BlogPost.objects.all()
+    serializer_class = BlogPostSerializer
+
+    def retrieve(self, request, pk=None, **kwargs):
+                user = get_object_or_404(self.get_queryset(), pk=pk)
+                serializer = self.serializer_class(user, context={"request": request})
+                related_posts = BlogPost.objects.filter(category=serializer.data['category'])[:2]
+                serializer_blogs = BlogPostSerializer(related_posts, many=True)
+                return Response({"additional_data":BlogPostViewSet().retrieve_additional_data(),
+                                 "data":serializer.data, "related posts":serializer_blogs.data})
+
+class AuthorViewset(viewsets.ModelViewSet):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+
+    def retrieve(self, request, pk=None, **kwargs):
+        user = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer = self.serializer_class(user, context={"request": request})
+        author_posts = BlogPost.objects.filter(author=serializer.data['id'])
+        serializer_blogs = BlogPostSerializer(author_posts, many=True)
+
+        return Response({"author_information":serializer.data,"blogs_of_author":serializer_blogs.data})
 
 
+class ContactListCreateView(generics.ListCreateAPIView):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
 
-    

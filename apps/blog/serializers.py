@@ -1,6 +1,6 @@
 from rest_framework import serializers
+from .models import BlogPost, Category, Tag, Review, Author, Contact, PageVisit, ViewCount
 from django.contrib.auth.models import User
-from .models import BlogPostModel, CategoryModel, TagModel, ReviewModel
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -27,40 +27,55 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['review_score', 'post_id']
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['tag_name']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['category_name', 'photo_of_category']
+
+
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ['id','name', 'Address', 'social_media_links', 'occupation']
+
+
 class BlogPostSerializer(serializers.ModelSerializer):
+    read_time = serializers.SerializerMethodField()
+
     class Meta:
-        model = BlogPostModel
-        fields = "__all__"
+        model = BlogPost
+        fields = [
+            "id",
+            "author",
+            "category",
+            "title",
+            "created",
+            "hashtag",
+            "image",
+            "video",
+            "text",
+            "read_time",
+        ]
 
 
-class ReviewModelSerializer(serializers.ModelSerializer):
+    def get_read_time(self, obj):
+        return obj.read_time
+
+class ContactSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ReviewModel
-        fields = "__all__"
+        model = Contact
+        fields = ['id', 'name','email','subject', 'text']
 
 
-class TagModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TagModel
-        fields = "__all__"
-
-
-class CategoryModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CategoryModel
-        fields = "__all__"
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        dict_data = dict()
-        for i in CategoryModel.objects.all():
-            posts_count = BlogPostModel.objects.filter(category_id=i.id).count()
-            dict_data[f"{i.category_name}"] = f"{posts_count}"
-        representation["Categories count"] = dict_data
-        return representation
-
-
-class BlogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BlogPostModel
-        fields = ['author', 'category', 'title', 'date_time', 'view_count', 'hashtag', 'image', 'video', 'text']
