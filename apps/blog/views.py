@@ -6,13 +6,19 @@ from django.contrib.auth import authenticate
 from .serializers import UserSerializer
 from rest_framework import viewsets, filters
 from .models import BlogPost, PageVisit, ViewCount, Review, Category, Author, Contact
-from .serializers import BlogPostSerializer, ReviewSerializer, AuthorSerializer, ContactSerializer
+from .serializers import (
+    BlogPostSerializer,
+    ReviewSerializer,
+    AuthorSerializer,
+    ContactSerializer,
+)
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import BlogPostFilter
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
+
 
 class RegisterView(APIView):
     def post(self, request):
@@ -70,7 +76,9 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             .count()
         )
         review = ReviewSerializer(Review.objects.most_targeted_posts(), many=True)
-        authors = AuthorSerializer(Author.objects.get_authors_with_highest_views(), many=True)
+        authors = AuthorSerializer(
+            Author.objects.get_authors_with_highest_views(), many=True
+        )
         representation = {
             "Categories count": Category.objects.get_category_post_counts(),
             "new posts count": BlogPost.objects.new_posts_on_current_date(),
@@ -78,12 +86,10 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             "blog read": ViewCount.objects.get_today_read_count(),
             "Targeted posts count": review.data,
             "new users count": new_users,
-            "top authors":authors.data
+            "top authors": authors.data,
         }
 
         return representation
-
-
 
 
 class BlogPostDetailViewset(viewsets.ModelViewSet):
@@ -91,12 +97,20 @@ class BlogPostDetailViewset(viewsets.ModelViewSet):
     serializer_class = BlogPostSerializer
 
     def retrieve(self, request, pk=None, **kwargs):
-                user = get_object_or_404(self.get_queryset(), pk=pk)
-                serializer = self.serializer_class(user, context={"request": request})
-                related_posts = BlogPost.objects.filter(category=serializer.data['category'])[:2]
-                serializer_blogs = BlogPostSerializer(related_posts, many=True)
-                return Response({"additional_data":BlogPostViewSet().retrieve_additional_data(),
-                                 "data":serializer.data, "related posts":serializer_blogs.data})
+        user = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer = self.serializer_class(user, context={"request": request})
+        related_posts = BlogPost.objects.filter(category=serializer.data["category"])[
+            :2
+        ]
+        serializer_blogs = BlogPostSerializer(related_posts, many=True)
+        return Response(
+            {
+                "additional_data": BlogPostViewSet().retrieve_additional_data(),
+                "data": serializer.data,
+                "related posts": serializer_blogs.data,
+            }
+        )
+
 
 class AuthorViewset(viewsets.ModelViewSet):
     queryset = Author.objects.all()
@@ -105,13 +119,17 @@ class AuthorViewset(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None, **kwargs):
         user = get_object_or_404(self.get_queryset(), pk=pk)
         serializer = self.serializer_class(user, context={"request": request})
-        author_posts = BlogPost.objects.filter(author=serializer.data['id'])
+        author_posts = BlogPost.objects.filter(author=serializer.data["id"])
         serializer_blogs = BlogPostSerializer(author_posts, many=True)
 
-        return Response({"author_information":serializer.data,"blogs_of_author":serializer_blogs.data})
+        return Response(
+            {
+                "author_information": serializer.data,
+                "blogs_of_author": serializer_blogs.data,
+            }
+        )
 
 
 class ContactListCreateView(generics.ListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-

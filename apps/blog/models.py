@@ -9,7 +9,8 @@ from .managers import (
     ReviewManager,
     CategoryManager,
     PageVisitManager,
-    ViewCountManager, AuthorManager
+    ViewCountManager,
+    AuthorManager,
 )
 
 
@@ -130,8 +131,5 @@ class Contact(RequiredFields):
     subject = models.CharField(max_length=400, blank=False, null=False)
     text = models.TextField()
 
-
     def __str__(self):
         return self.name
-
-

@@ -9,7 +9,7 @@ from .models import (
     Comment,
     Review,
     Contact,
-    ViewCount
+    ViewCount,
 )
 
 
@@ -23,4 +23,3 @@ admin.site.register(Comment)
 admin.site.register(Review)
 admin.site.register(Contact)
 admin.site.register(ViewCount)
-

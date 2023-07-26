@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from .models import BlogPost, Category, Tag, Review, Author, Contact, PageVisit, ViewCount
+from .models import (
+    BlogPost,
+    Category,
+    Tag,
+    Review,
+    Author,
+    Contact,
+)
 from django.contrib.auth.models import User
 
 
@@ -30,25 +37,25 @@ class UserSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = ['review_score', 'post_id']
+        fields = ["review_score", "post_id"]
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ['tag_name']
+        fields = ["tag_name"]
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['category_name', 'photo_of_category']
+        fields = ["category_name", "photo_of_category"]
 
 
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
-        fields = ['id','name', 'Address', 'social_media_links', 'occupation']
+        fields = ["id", "name", "Address", "social_media_links", "occupation"]
 
 
 class BlogPostSerializer(serializers.ModelSerializer):
@@ -69,13 +76,11 @@ class BlogPostSerializer(serializers.ModelSerializer):
             "read_time",
         ]
 
-
     def get_read_time(self, obj):
         return obj.read_time
+
 
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
-        fields = ['id', 'name','email','subject', 'text']
-
-
+        fields = ["id", "name", "email", "subject", "text"]

@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.db.models import Count
 
+
 class BlogPostManager(models.Manager):
     def top_reviewed_posts(self, num_posts=2):
         return self.all().order_by("-review_score")[:num_posts]
@@ -45,9 +46,12 @@ class ViewCountManager(models.Manager):
 
 class AuthorManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().annotate(total_views=Count('blogpost__viewcount')).order_by('-total_views')
+        return (
+            super()
+            .get_queryset()
+            .annotate(total_views=Count("blogpost__viewcount"))
+            .order_by("-total_views")
+        )
 
     def get_authors_with_highest_views(self):
         return self.get_queryset()[:3]
-
-
