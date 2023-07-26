@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from django.contrib.auth import authenticate
+from rest_framework import generics
 from .serializers import UserSerializer
 from rest_framework import viewsets, filters
 from .models import BlogPostModel, ReviewModel, CategoryModel
@@ -11,6 +12,7 @@ from .serializers import (
     ReviewModelSerializer,
     CategoryModelSerializer,
     TagModelSerializer,
+    BlogSerializer
 )
 from django.utils import timezone
 from django.contrib.auth.models import User
@@ -82,3 +84,15 @@ class BlogPostViewSet(viewsets.ModelViewSet):
         )
 
 
+
+class BlogListCreateView(generics.ListCreateAPIView):
+    queryset = BlogPostModel.objects.all()
+    serializer_class = BlogSerializer
+
+class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = BlogPostModel.objects.all()
+    serializer_class = BlogSerializer
+
+
+
+    

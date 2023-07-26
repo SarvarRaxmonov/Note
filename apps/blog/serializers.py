@@ -58,3 +58,9 @@ class CategoryModelSerializer(serializers.ModelSerializer):
             dict_data[f"{i.category_name}"] = f"{posts_count}"
         representation["Categories count"] = dict_data
         return representation
+
+
+class BlogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogPostModel
+        fields = ['author', 'category', 'title', 'date_time', 'view_count', 'hashtag', 'image', 'video', 'text']
